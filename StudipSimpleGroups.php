@@ -21,6 +21,22 @@ class StudipSimpleGroups extends StudIPPlugin implements SystemPlugin {
         }
 
         NotificationCenter::addObserver($this, 'modifyGroupEntries', 'DatafieldDidUpdate');
+        NotificationCenter::addObserver($this, 'setDefaultGroup', 'UserDidCreate');
+    }
+
+
+
+    function setDefaultGroup($event, $user_id, $data)
+    {
+        $default_group = trim(Config::get()->SIMPLE_GROUPS_USER_DEFAULT);
+        $user = User::find($user_id);
+        if ($default_group && in_array($user->perms, words('autor tutor dozent'))) {
+            if ($df = $user->datafields->findBy('datafield_id', self::$datafield_user)->first()) {
+                $datafield = $df->getTypedDatafield();
+                $datafield->setValue($datafield->getValue() . ',' . $default_group);
+                $datafield->store();
+            }
+        }
     }
 
     /**
